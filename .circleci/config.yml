@@ -33,3 +33,8 @@ jobs:
       - run:
           name: Test Coverage
           command: bundle exec slather
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build-and-test
