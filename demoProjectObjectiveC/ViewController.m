@@ -19,6 +19,9 @@
     // Do any additional setup after loading the view, typically from a nib.
 }
 
+- (BOOL)validateEmail: (NSString *)email {
+    return ![email isEqual:@""];
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

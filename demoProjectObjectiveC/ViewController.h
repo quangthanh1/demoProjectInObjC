@@ -10,6 +10,7 @@
 
 @interface ViewController : UIViewController
 
+- (BOOL)validateEmail: (NSString *)email;
 
 @end
 
