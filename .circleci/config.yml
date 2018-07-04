@@ -11,11 +11,6 @@ jobs:
       name: Prepare .config files
       command: echo "repo_token:\ $COVERALLS_REPO_TOKEN" > ./.coveralls.yml
 
-    # Update gems to the latest versions
-    - run:
-      name: Update gems
-      command: bundle update
-
     - run: 
       name: install bundle
       command: bundle install
