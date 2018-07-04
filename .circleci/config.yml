@@ -30,10 +30,12 @@ jobs:
       # and save the same XML files under test-results folder
       # in the Artifacts tab
       - store_test_results:
-          path: test_output/report.xml
+          path: coverage/report.xml
+
       - store_artifacts:
           path: /tmp/test-results
           destination: scan-test-results
+           
       - store_artifacts:
           path: ~/Library/Logs/scan
           destination: scan-logs
@@ -43,5 +45,5 @@ jobs:
           command: sleep 5
 
       - test:
-          post:
-          - bundle exec slather
+          name: Test Coverage
+          command: bundle exec slather
