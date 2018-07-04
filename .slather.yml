@@ -3,6 +3,7 @@ coverage_service: coveralls
 xcodeproj: demoProjectObjectiveC.xcodeproj
 workspace: demoProjectObjectiveC.xcworkspace
 source_directory: ./
+output_directory: ./test_output
 scheme: demoProjectObjectiveC
 ignore:
   - Pods/*
