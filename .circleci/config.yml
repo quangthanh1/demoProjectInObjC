@@ -1,35 +1,42 @@
 version: 2
-    jobs:
-    build:
-        macos:
-        xcode: "9.3.0"
+jobs:
+  build:
+    macos:
+      xcode: "9.3.0"
 
-        steps:
-        - checkout
+    shell: /bin/bash --login -eo pipefail
 
-        - run:
-            name: Prepare .config files
-            command: echo "repo_token:\ $COVERALLS_REPO_TOKEN" > ./.coveralls.yml
+    steps:
+    - checkout
 
-        - run: 
-            name: install bundle
-            command: bundle install --jobs 4 --path vendor/bundle
+    - run:
+      name: Prepare .config files
+      command: echo "repo_token:\ $COVERALLS_REPO_TOKEN" > ./.coveralls.yml
 
-        - run:
-            name: Install CocoaPods
-            command: pod install
+    # Update gems to the latest versions
+    - run:
+      name: Update gems
+      command: bundle update
 
-        - run:
-            name: Run tests
-            command: fastlane scan
-            environment:
-                SCAN_DEVICE: iPhone 6
-                SCAN_SCHEME: demoProjectObjectiveC
+    - run: 
+      name: install bundle
+      command: bundle install
 
-        - run: 
-            name: Waitting Coverage generated
-            command: sleep 5
+    - run:
+      name: Install CocoaPods
+      command: pod install
 
-        - run:
-            name: Test Coverage
-            command: bundle exec slather
+    - run:
+      name: Run tests
+      command: fastlane scan
+      environment:
+        SCAN_DEVICE: iPhone 6
+        SCAN_SCHEME: demoProjectObjectiveC
+
+    - run: 
+      name: Waitting Coverage generated
+      command: sleep 5
+
+    - run:
+      name: Test Coverage
+      command: bundle exec slather
