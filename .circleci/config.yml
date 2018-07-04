@@ -1,3 +1,4 @@
+# .circleci/config.yml
 version: 2
 jobs:
   build:
@@ -8,28 +9,28 @@ jobs:
       - checkout
 
       - run:
-        name: Prepare .config files
-        command: echo "repo_token:\ $COVERALLS_REPO_TOKEN" > ./.coveralls.yml
+          name: Prepare .config files
+          command: echo "repo_token:\ $COVERALLS_REPO_TOKEN" > ./.coveralls.yml
 
       - run: 
-        name: install bundle
-        command: bundle install
+          name: install bundle
+          command: bundle install
 
       - run:
-        name: Install CocoaPods
-        command: pod install
+          name: Install CocoaPods
+          command: pod install
 
       - run:
-        name: Run tests
-        command: fastlane scan
-        environment:
-          SCAN_DEVICE: iPhone 6
-          SCAN_SCHEME: demoProjectObjectiveC
+          name: Run tests
+          command: fastlane scan
+          environment:
+            SCAN_DEVICE: iPhone 6
+            SCAN_SCHEME: demoProjectObjectiveC
 
       - run: 
-        name: Waitting Coverage generated
-        command: sleep 5
+          name: Waitting Coverage generated
+          command: sleep 5
 
       - run:
-        name: Test Coverage
-        command: bundle exec slather
+          name: Test Coverage
+          command: bundle exec slather
