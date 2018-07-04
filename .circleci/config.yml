@@ -44,6 +44,6 @@ jobs:
           name: Waitting Coverage generated
           command: sleep 5
 
-      - test:
+      - run:
           name: Test Coverage
           command: bundle exec slather
