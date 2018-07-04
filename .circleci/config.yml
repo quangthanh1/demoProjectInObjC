@@ -1,0 +1,35 @@
+version: 2
+jobs:
+  build:
+    macos:
+      xcode: "9.3.0"
+
+    steps:
+      - checkout
+
+      - run:
+          name: Prepare .config files
+          command: echo "$REPO_TOKEN" | base64 -D > ./.coveralls.yml
+
+      - run: 
+          name: install bundle
+          command: bundle install --jobs 4 --path vendor/bundle
+
+      - run:
+          name: Install CocoaPods
+          command: pod installs
+
+      - run:
+          name: Run tests
+          command: fastlane scan
+          environment:
+            SCAN_DEVICE: iPhone 6
+            SCAN_SCHEME: demoProjectObjectiveC
+
+      - run: 
+          name: Waitting Coverage generated
+          command: sleep 5
+
+      - run:
+          name: Test Coverage
+          command: bundle exec slather

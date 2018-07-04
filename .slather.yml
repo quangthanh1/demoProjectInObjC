@@ -1,0 +1,11 @@
+ci_service: circleci
+coverage_service: coveralls
+xcodeproj: demoProjectObjectiveC.xcodeproj
+workspace: demoProjectObjectiveC.xcworkspace
+source_directory: ./
+scheme: demoProjectObjectiveC
+ignore:
+  - Pods/*
+  - demoProjectObjectiveCTests/*
+  - demoProjectObjectiveCUITests/*
+  - ../**/*/Xcode*

@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Test Results | xcpretty</title>
+    <style type="text/css">
+      body { font-family:Avenir Next, Helvetica Neue, sans-serif; color: #4A4A4A; background-color: #F0F3FB; margin:0;}
+      h1 { font-weight: normal; font-size: 24px; margin: 10px 0 0 0;}
+      h3 { font-weight: normal; margin: 2px; font-size: 1.1em;}
+      header { position: fixed;width: 100%;background: rgba(249, 254, 255, 0.9);margin: 0;padding: 10px;}
+      header:before, header:after { content:""; display:table;}
+      header:after { clear:both;}
+      a:link { color: #A1D761;}
+      footer { clear: both;position: relative;z-index: 10;height: 40px;margin-top: -10px; margin-left:30px; font-size:12px;}
+      table { width:100%; border-collapse: collapse;}
+      tr td:first-child { width:7%}
+      .left { float: left; margin-left:30px;}
+      .right { float: right; margin-right: 40px; margin-top: 0; margin-bottom:0;}
+      .test-suite { margin: 0 0 30px 0;}
+      .test-suite > .heading { font-family:Menlo, Monaco, monospace; font-weight: bold; border-color: #A1D761; background-color: #B8E986; border-width: 1px;}
+      .test-suite.failing > .heading { border-color: #C84F5E; background-color: #E58591;}
+      .test-suite > .heading > .title { margin-top: 4px; margin-left: 10px;}
+      .tests { overflow: scroll;margin: 0 30px 0 60px;}
+      .test, .test-suite > .heading { height: 30px; overflow: hidden; margin: 0 30px;}
+      .test, .test-suite > .heading { border-width: 1px; border-collapse: collapse; border-style: solid; }
+      .test { margin-left: 30px; border-top:none;}
+      .test.failing { border-color: #C84F5E; background-color: #F4DDE0;}
+      .test.passing { border-color: #A1D761;}
+      .test.failing { background-color: #E7A1AA;}
+      .test.passing { background-color: #CAF59F;}
+      .test.failing.odd { background-color: #EEC7CC;}
+      .test.passing.odd { background-color: #E5FBCF;}
+      .details.failing { background-color: #F4DDE0; border: 1px solid #C84F5E;}
+      .details.passing { background-color: #E5F4DC; border: 1px solid #A1D761;}
+      .test .test-detail:last-child { padding-bottom: 8px;}
+      .test .title { float: left; font-size: 0.9em; margin-top: 8px; font-family: Menlo, Monaco, monospace;}
+      .test .time { float: left;margin: 4px 10px 0 20px;}
+      .test-detail { font-family:Menlo, Monaco, monospace; font-size: 0.9em; margin: 5px 0 5px 0px;}
+      .screenshots { height: auto; overflow: hidden; padding: 4px 4px 0 4px; background-color: #B8E986; border: #A1D761; border-width: 0 1px; border-style: solid; }
+      .screenshots.failing { border-color: #C84F5E; background-color: #E58591; }
+      .screenshot { max-height: 60px; float: left; transition: max-height 0.2s; margin: 0 4px 4px 0 }
+      .screenshot.selected { max-height: 568px; }
+      #test-suites { display: inline-block; width: 100%;margin-top:100px;}
+      #segment-bar { margin-top: 10px;margin-left: 14px;float:right;}
+      #segment-bar a:first-child { border-radius: 9px 0 0 9px; border-right: none;}
+      #segment-bar a:last-child { border-radius: 0 9px 9px 0; border-left: none;}
+      #segment-bar > a { color: #565656; border: 2px solid  #7B7B7B; width: 80px; font-weight: bold; display:inline-block;text-align:center; font-weight: normal;}
+      #segment-bar > a.selected { background-color: #979797; color: #F0F3FB;}
+      #counters { float: left;margin: 10px;text-align: right;}
+      #counters h2 { font-size: 16px; font-family: Avenir, sans-serif; font-weight: lighter; display:inline;}
+      #counters .number { font-size: 20px;}
+      #fail-count { color: #D0021B; margin-left:10px;}
+      @media (max-width: 640px) {
+        h1, #counters, #segment-bar { margin: 5px auto; text-align:center;}
+        header, #segment-bar { width: 100%; position: relative; background:none;}
+        .left, .right { float:none; margin:0;}
+        #test-suites { margin-top: 0;}
+        #counters { float:none;}
+      }
+    </style>
+    <script type="text/javascript">
+      var hide = function(element) { element.style.display = 'none';}
+      var show = function(element) { element.style.display = '';}
+      var isHidden = function(element) { return element.style.display == 'none';}
+      var isSelected = function(element) { return element.classList.contains("selected");}
+      var deselect = function(element) { return element.classList.remove("selected");}
+      var select = function(element) { return element.classList.add("selected");}
+      var toggle = function(element) { isHidden(element) ? show(element) : hide(element);};
+      var toggleTests = function(heading) { toggle(heading.parentNode.children[1]);};
+      var toggleDetails = function(detailClass) {
+        var details = document.querySelectorAll('.' + detailClass);
+        for (var i = details.length - 1; i >= 0; i--) { toggle(details[i]);};
+      };
+      var hideAll = function(collection) {
+        for (var i = collection.length - 1; i >= 0; i--) { hide(collection[i]); };
+      }
+      var showAll = function(collection) {
+        for (var i = collection.length - 1; i >= 0; i--) { show(collection[i]); };
+      }
+      var selectSegment = function(segment) {
+        if (isSelected(segment)) return;
+        var segments = document.querySelectorAll('#segment-bar > a');
+        for (var i = segments.length - 1; i >= 0; i--) { deselect(segments[i]);};
+        select(segment);
+        if (segment.id == "all-segment") {
+          showAll(document.querySelectorAll('.test-suite'));
+          showAll(document.querySelectorAll('.test'));
+        } else if (segment.id == "failing-segment") {
+          hideAll(document.querySelectorAll('.test.passing'));
+          showAll(document.querySelectorAll('.test.failing'));
+          hideAll(document.querySelectorAll('.test-suite.passing'));
+          showAll(document.querySelectorAll('.test-suite.failing'));
+        } else if (segment.id == "passing-segment") {
+          hideAll(document.querySelectorAll('.test.failing'));
+          showAll(document.querySelectorAll('.test.passing'));
+          hideAll(document.querySelectorAll('.test-suite.failing'));
+          showAll(document.querySelectorAll('.test-suite.passing'));
+        }
+      }
+      var toggleScreenshot = function(suiteName, index) {
+        var screenshot = document.getElementById("screenshot-" + suiteName + "-" + index);
+        isSelected(screenshot) ? deselect(screenshot) : select(screenshot);
+      }
+    </script>
+  </head>
+  <body>
+    <header>
+      <section class="left">
+        <h1>Test Results</h1>
+      </section>
+      <section class="right">
+        <section id="counters">
+          <h2 id="test-count"><span class="number">163</span> tests</h2>
+          
+            <h2 id="fail-count"><span class="number">6</span> failures</h2>
+          
+        </section>
+        <section id="segment-bar">
+          <a id="all-segment" onclick="selectSegment(this);" class="selected">All</a><a id="failing-segment" onclick="selectSegment(this);">Failing</a><a id="passing-segment" onclick="selectSegment(this);">Passing</a>
+        </section>
+      </section>
+    </header>
+    <section id="test-suites">
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.AnalyticsDashboardViewModelTest">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.AnalyticsDashboardViewModelTest</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('AnalyticsDashboardViewModel__Get_All_Items__correct');">
+                <td>
+                  
+                    <h3 class="time">0.008s</h3>
+                  
+                </td>
+                <td><h3 class="title">AnalyticsDashboardViewModel__Get_All_Items__correct</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('AnalyticsDashboardViewModel__Get_Item_at_valid_index__correct');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">AnalyticsDashboardViewModel__Get_Item_at_valid_index__correct</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('AnalyticsDashboardViewModel__Get_Item_at_invalid_index__correct');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">AnalyticsDashboardViewModel__Get_Item_at_invalid_index__correct</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('AnalyticsDashboardViewModel__Get_username__correct');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">AnalyticsDashboardViewModel__Get_username__correct</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.CategoryServiceSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.CategoryServiceSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_DeviceCategories__success_with_empty_list__receive_data_empty');">
+                <td>
+                  
+                    <h3 class="time">0.085s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_DeviceCategories__success_with_empty_list__receive_data_empty</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_DeviceCategories__success_with_3_items_list__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.013s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_DeviceCategories__success_with_3_items_list__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_DeviceCategories__error_invalid_token__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.012s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_DeviceCategories__error_invalid_token__receive_error</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.CompareFeaturesCellViewModelTest">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.CompareFeaturesCellViewModelTest</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Url_Icon_Image__From_list_empty_feature__Should_receive_nil_string');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Url_Icon_Image__From_list_empty_feature__Should_receive_nil_string</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Url_Icon_Image__From_non_empty_list_without_image_url__Should_receive_nil_string');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Url_Icon_Image__From_non_empty_list_without_image_url__Should_receive_nil_string</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Url_Icon_Image__From_list_with_image_url_in_first_feature_only__Should_receive_image_url_from_first_feature');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Url_Icon_Image__From_list_with_image_url_in_first_feature_only__Should_receive_image_url_from_first_feature</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Url_Icon_Image__From_list_with_image_url_in_second_feature_only__Should_receive_image_url_from_second_feature_only');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Url_Icon_Image__From_list_with_image_url_in_second_feature_only__Should_receive_image_url_from_second_feature_only</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Url_Icon_Image__From_list_with_image_url_in_2_features__Should_receive_image_url_from_first_feature');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Url_Icon_Image__From_list_with_image_url_in_2_features__Should_receive_image_url_from_first_feature</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Name__From_list_empty_feature__Should_receive_nil_string');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Name__From_list_empty_feature__Should_receive_nil_string</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Get_Feature_Name__From_non_empty_list_without_name__Should_receive_nil_string');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Name__From_non_empty_list_without_name__Should_receive_nil_string</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Name__From_list_with_name_in_first_feature_only__Should_receive_name_from_first_feature');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Name__From_list_with_name_in_first_feature_only__Should_receive_name_from_first_feature</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Get_Feature_Name__From_list_with_name_in_second_feature_only__Should_receive_name_from_second_feature_only');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Name__From_list_with_name_in_second_feature_only__Should_receive_name_from_second_feature_only</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Name__From_list_with_name_in_2_features__Should_receive_name_from_first_feature');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Name__From_list_with_name_in_2_features__Should_receive_name_from_first_feature</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Get_Feature_Value__From_out_of_bound_array__Should_receive_nil');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Value__From_out_of_bound_array__Should_receive_nil</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Value__From_nil_placeholder__Should_receive_value');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Value__From_nil_placeholder__Should_receive_value</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Get_Feature_Value__From_not_nil_placeholder__Should_receive_placeholder');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Value__From_not_nil_placeholder__Should_receive_placeholder</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Url__From_out_of_bound_array__Should_receive_nil');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Url__From_out_of_bound_array__Should_receive_nil</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Get_Feature_Url__From_invalid_url__Should_receive_nil');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Url__From_invalid_url__Should_receive_nil</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Url__From_valid_url__Should_receive_a_not_nil_url');">
+                <td>
+                  
+                    <h3 class="time">0.007s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Url__From_valid_url__Should_receive_a_not_nil_url</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Show_Feature_Icon__From_list_empty_feature__Should_receive_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Show_Feature_Icon__From_list_empty_feature__Should_receive_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Show_Feature_Icon__From_non_empty_list_without_image_url__Should_receive_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Show_Feature_Icon__From_non_empty_list_without_image_url__Should_receive_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Show_Feature_Icon__From_list_with_image_url_in_first_feature_only__Should_receive_true');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Show_Feature_Icon__From_list_with_image_url_in_first_feature_only__Should_receive_true</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Show_Feature_Icon__From_list_with_image_url_in_second_feature_only__Should_receive_image_url_from_second_feature_only');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Show_Feature_Icon__From_list_with_image_url_in_second_feature_only__Should_receive_image_url_from_second_feature_only</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Show_Feature_Icon__From_list_with_image_url_in_2_features__Should_receive_image_url_from_first_feature');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Show_Feature_Icon__From_list_with_image_url_in_2_features__Should_receive_image_url_from_first_feature</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Url__From_out_of_bound_array__Should_receive_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Url__From_out_of_bound_array__Should_receive_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Test_Get_Feature_Url__From_invalid_url__Should_receive_false');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Url__From_invalid_url__Should_receive_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Test_Get_Feature_Url__From_valid_url__Should_receive_a_not_nil_url_2');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Test_Get_Feature_Url__From_valid_url__Should_receive_a_not_nil_url_2</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.DeviceCategoriesViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.DeviceCategoriesViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Load_Device_Categories__Success__receive_right_list');">
+                <td>
+                  
+                    <h3 class="time">0.003s</h3>
+                  
+                </td>
+                <td><h3 class="title">Load_Device_Categories__Success__receive_right_list</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Load_Device_Categories__Fail__receive_right_list');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Load_Device_Categories__Fail__receive_right_list</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Category__With_valid_index__receive_device_category');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Category__With_valid_index__receive_device_category</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_Category__With_valid_index___wrong_section_0__donot_receive_device_category');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Category__With_valid_index___wrong_section_0__donot_receive_device_category</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Category__With_valid_index___wrong_row__donot_receive_device_category');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Category__With_valid_index___wrong_row__donot_receive_device_category</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.DeviceServiceSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.DeviceServiceSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_devices__success_with_empty_list__receive_data_empty');">
+                <td>
+                  
+                    <h3 class="time">0.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices__success_with_empty_list__receive_data_empty</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_devices__success__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.013s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices__success__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_devices__error_invalid_token__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.012s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices__error_invalid_token__receive_error</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_Bulks__success__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.013s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Bulks__success__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Bulks__error_invalid_token__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.012s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Bulks__error_invalid_token__receive_error</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.DevicesCompareViewModelTest">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.DevicesCompareViewModelTest</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Category__Right');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Category__Right</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_Current_Filter__Right');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Current_Filter__Right</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Device_Features_Observable__Success__Receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Device_Features_Observable__Success__Receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_Device_Features_Observable__Fail__Receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Device_Features_Observable__Fail__Receive_error</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Combine_Device_Feature__From_2_empty_array__Should_Receive_Empty_Array');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Combine_Device_Feature__From_2_empty_array__Should_Receive_Empty_Array</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_Combine_Device_Feature__From_1_empty_array__1_not_empty_array__Should_Receive_Empty_Array');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Combine_Device_Feature__From_1_empty_array__1_not_empty_array__Should_Receive_Empty_Array</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Combine_Device_Feature__From_1_empty_array__2_not_empty_arrays__Should_Receive_Empty_Array');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Combine_Device_Feature__From_1_empty_array__2_not_empty_arrays__Should_Receive_Empty_Array</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_Combine_Device_Feature__From_2_arrays__Should_Receive_Empty_Array');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Combine_Device_Feature__From_2_arrays__Should_Receive_Empty_Array</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_merged_array_device_url_and_website_feature__From_an_empty_array__Should_receive_an_empty_array');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_merged_array_device_url_and_website_feature__From_an_empty_array__Should_receive_an_empty_array</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_merged_array_device_url_and_website_feature__From_an_array_with_url__Should_receive_an_array_with_the_same_url_feature');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_merged_array_device_url_and_website_feature__From_an_array_with_url__Should_receive_an_array_with_the_same_url_feature</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_merged_array_device_url_and_website_feature__From_an_array_with_website__Should_return_an_array_with_the_same_website');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_merged_array_device_url_and_website_feature__From_an_array_with_website__Should_return_an_array_with_the_same_website</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_merged_array_device_url_and_website_feature__From_an_array_with_both_url_and_website__Should_an_array_with_merged_url_and_website');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_merged_array_device_url_and_website_feature__From_an_array_with_both_url_and_website__Should_an_array_with_merged_url_and_website</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.DevicesViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.DevicesViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_static_property___Category__receive_right_category');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_static_property___Category__receive_right_category</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_static_property___maximumNumberSelectedDevices__is_two');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_static_property___maximumNumberSelectedDevices__is_two</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_devices_success_by_filter__System___not_bulk___entry__receive_devices');">
+                <td>
+                  
+                    <h3 class="time">0.004s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__System___not_bulk___entry__receive_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_devices_success_by_filter__System___not_bulk___advanced__receive_devices');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__System___not_bulk___advanced__receive_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_devices_success_by_filter__System___bulk___entry__receive_devices');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__System___bulk___entry__receive_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_devices_success_by_filter__System___bulk___advanced__receive_devices');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__System___bulk___advanced__receive_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_devices_success_by_filter__Unit___not_bulk___entry__receive_devices');">
+                <td>
+                  
+                    <h3 class="time">0.003s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__Unit___not_bulk___entry__receive_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_devices_success_by_filter__Unit___not_bulk___advanced__receive_devices');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__Unit___not_bulk___advanced__receive_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_devices_success_by_filter__Unit___bulk___entry__Unit_devices');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__Unit___bulk___entry__Unit_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_devices_success_by_filter__Unit___bulk___advanced__receive_devices');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_devices_success_by_filter__Unit___bulk___advanced__receive_devices</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('select_devices_success__selecting_device_is_nil');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__selecting_device_is_nil</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('select_devices_success__with_filter_System___not_bulk___entry__selecting_device_is_nil');">
+                <td>
+                  
+                    <h3 class="time">0.006s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__with_filter_System___not_bulk___entry__selecting_device_is_nil</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('select_devices_success__with_filter_System___not_bulk___entry__select_the_first_item__selecting_device_is_one');">
+                <td>
+                  
+                    <h3 class="time">0.007s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__with_filter_System___not_bulk___entry__select_the_first_item__selecting_device_is_one</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('select_devices_success__with_filter_System___not_bulk___entry__select_the_first_item__then_deselect_the_that_one__selecting_device_is_empty');">
+                <td>
+                  
+                    <h3 class="time">0.003s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__with_filter_System___not_bulk___entry__select_the_first_item__then_deselect_the_that_one__selecting_device_is_empty</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('select_devices_success__with_filter_System___not_bulk___entry__select_2_items__The_selecting_device_is_two_items');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__with_filter_System___not_bulk___entry__select_2_items__The_selecting_device_is_two_items</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('select_devices_success__with_filter_System___not_bulk___entry__select_2_items__then_deselect_the_first_one__selecting_device_is_one_item');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__with_filter_System___not_bulk___entry__select_2_items__then_deselect_the_first_one__selecting_device_is_one_item</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('select_devices_success__with_filter_System___not_bulk___entry__select_2_items__filter_With_Unit___bulk___entry__selecting_device_is_emplty');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__with_filter_System___not_bulk___entry__select_2_items__filter_With_Unit___bulk___entry__selecting_device_is_emplty</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('select_devices_success__with_filter_System___not_bulk___entry__select_2_items__filter_With_system___bulk___entry__selecting_device_is_still_2');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">select_devices_success__with_filter_System___not_bulk___entry__select_2_items__filter_With_system___bulk___entry__selecting_device_is_still_2</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Should_show_statistic_view__when_Device_price_statistic_is_valid_and_selected_devices_is_empty__the_result_is_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_show_statistic_view__when_Device_price_statistic_is_valid_and_selected_devices_is_empty__the_result_is_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Should_show_statistic_view__when_Device_price_statistic_is_valid_and_selected_devices_is_not_empty__the_result_is_true');">
+                <td>
+                  
+                    <h3 class="time">0.003s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_show_statistic_view__when_Device_price_statistic_is_valid_and_selected_devices_is_not_empty__the_result_is_true</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Should_show_statistic_view__when_Device_price_statistic_is_invalid_and_selected_devices_is_empty__the_result_is_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_show_statistic_view__when_Device_price_statistic_is_invalid_and_selected_devices_is_empty__the_result_is_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Should_show_statistic_view__when_Device_price_statistic_is_invalid_and_selected_devices_is_not_empty__the_result_is_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_show_statistic_view__when_Device_price_statistic_is_invalid_and_selected_devices_is_not_empty__the_result_is_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_Device_Price_Statistic__Success__the_result_is_false');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Device_Price_Statistic__Success__the_result_is_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_Device_Price_Statistic__Fail__the_result_is_false');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_Device_Price_Statistic__Fail__the_result_is_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_bulks__Success');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_bulks__Success</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.HospitalDetailViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.HospitalDetailViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('HospitalDetailViewModel__Get_All_Items__correct');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">HospitalDetailViewModel__Get_All_Items__correct</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('HospitalDetailViewModel__Get_Item_at_valid_index__correct');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">HospitalDetailViewModel__Get_Item_at_valid_index__correct</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('HospitalDetailViewModel__Get_Item_at_invalid_index__correct');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">HospitalDetailViewModel__Get_Item_at_invalid_index__correct</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.HospitalSelectionViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.HospitalSelectionViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Load_Hospitals__Success__receive_right_hospitals');">
+                <td>
+                  
+                    <h3 class="time">0.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">Load_Hospitals__Success__receive_right_hospitals</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Load_Hospitals__Fail__receive_right_hospitals');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Load_Hospitals__Fail__receive_right_hospitals</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_hospital__With_valid_index__receive_hospital');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospital__With_valid_index__receive_hospital</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_hospital__With_valid_index___wrong_section_0__donot_receive_hospital');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospital__With_valid_index___wrong_section_0__donot_receive_hospital</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_hospital__With_valid_index___wrong_row__donot_receive_hospital');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospital__With_valid_index___wrong_row__donot_receive_hospital</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Select_hospital__at_valid_index__saved_hospital_id_is_right');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_hospital__at_valid_index__saved_hospital_id_is_right</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Select_hospital__at_invalid_index___wrong_section__saved_hospital_id_is_nil');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_hospital__at_invalid_index___wrong_section__saved_hospital_id_is_nil</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Select_hospital__at_invalid_index___wrong_row__saved_hospital_id_is_nil');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_hospital__at_invalid_index___wrong_row__saved_hospital_id_is_nil</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.HospitalServiceSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.HospitalServiceSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_hospitals__success_with_empty_list__receive_data_empty');">
+                <td>
+                  
+                    <h3 class="time">0.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospitals__success_with_empty_list__receive_data_empty</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_hospitals__success__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospitals__success__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_hospitals__error_invalid_token__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospitals__error_invalid_token__receive_error</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.KeyStorageManagerSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.KeyStorageManagerSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('KeyStorageManager__save_and_get_token__veriry_save_and_get_token_');">
+                <td>
+                  
+                    <h3 class="time">2.005s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_get_token__veriry_save_and_get_token_</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('KeyStorageManager__save_and_clear_token__veriry_save_and_clear_token_');">
+                <td>
+                  
+                    <h3 class="time">2.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_clear_token__veriry_save_and_clear_token_</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('KeyStorageManager__save_and_get_username__veriry_save_and_get_firstUserName_');">
+                <td>
+                  
+                    <h3 class="time">2.004s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_get_username__veriry_save_and_get_firstUserName_</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('KeyStorageManager__save_and_clear_username__veriry_save_and_get_firstUserName');">
+                <td>
+                  
+                    <h3 class="time">2.003s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_clear_username__veriry_save_and_get_firstUserName</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('KeyStorageManager__save_and_get_defaultHospitalId__veriry_save_and_get_defaultHospitalId_');">
+                <td>
+                  
+                    <h3 class="time">2.004s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_get_defaultHospitalId__veriry_save_and_get_defaultHospitalId_</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('KeyStorageManager__save_and_clear_defaultHospitalId__veriry_save_and_get_defaultHospitalId');">
+                <td>
+                  
+                    <h3 class="time">2.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_clear_defaultHospitalId__veriry_save_and_get_defaultHospitalId</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('KeyStorageManager__save_and_get_currentHospitalId__veriry_save_and_get_currentHospitalId_');">
+                <td>
+                  
+                    <h3 class="time">1.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_get_currentHospitalId__veriry_save_and_get_currentHospitalId_</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('KeyStorageManager__save_and_clear_currentHospitalId__veriry_save_and_get_currentHospitalId');">
+                <td>
+                  
+                    <h3 class="time">1.002s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_clear_currentHospitalId__veriry_save_and_get_currentHospitalId</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('KeyStorageManager__save_and_clear_all__save_and_clear_all');">
+                <td>
+                  
+                    <h3 class="time">2.004s</h3>
+                  
+                </td>
+                <td><h3 class="title">KeyStorageManager__save_and_clear_all__save_and_clear_all</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.LeftMenuViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.LeftMenuViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('LeftMenuViewModel__Get_All_Items__correct');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">LeftMenuViewModel__Get_All_Items__correct</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('LeftMenuViewModel__Get_Item_at_valid_index__correct');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">LeftMenuViewModel__Get_Item_at_valid_index__correct</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('LeftMenuViewModel__Get_Item_at_invalid_index__correct');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">LeftMenuViewModel__Get_Item_at_invalid_index__correct</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.LoginViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.LoginViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Login_with_email__password__success__receive_response_user_data_and_token');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Login_with_email__password__success__receive_response_user_data_and_token</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Login_with_email__password__fail__receive_error_message');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Login_with_email__password__fail__receive_error_message</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Store_user_and_token__success__data_is_saved_well');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Store_user_and_token__success__data_is_saved_well</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.MainViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.MainViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_hospitals__success__receive_hospitals');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospitals__success__receive_hospitals</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_hospitals__fail__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_hospitals__fail__receive_error</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Should_Show_HeaderView__hospitalSelection_when_defaultHospitalId_is_nil__result_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_Show_HeaderView__hospitalSelection_when_defaultHospitalId_is_nil__result_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Should_Show_HeaderView__hospitalSelection_when_defaultHospitalId_is_not_nil__result_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_Show_HeaderView__hospitalSelection_when_defaultHospitalId_is_not_nil__result_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Should_Show_HeaderView__hospitalDetail_when_defaultHospitalId_is_nil__result_false');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_Show_HeaderView__hospitalDetail_when_defaultHospitalId_is_nil__result_false</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Should_Show_HeaderView__hospitalDetail_when_defaultHospitalId_is_not_nil__result_true');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">Should_Show_HeaderView__hospitalDetail_when_defaultHospitalId_is_not_nil__result_true</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('ScreenType_Opened_At_First__when_defaultHospitalId_is_nil__result_is_hospitalSelection');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">ScreenType_Opened_At_First__when_defaultHospitalId_is_nil__result_is_hospitalSelection</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('ScreenType_Opened_At_First__when_defaultHospitalId_is_nil__result_is_hospitalDetail');">
+                <td>
+                  
+                    <h3 class="time">0.000s</h3>
+                  
+                </td>
+                <td><h3 class="title">ScreenType_Opened_At_First__when_defaultHospitalId_is_nil__result_is_hospitalDetail</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_user__success__receive_user');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_user__success__receive_user</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_user__fail__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_user__fail__receive_error</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.SlideMenuViewModelSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.SlideMenuViewModelSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('User_tapped_Menu__logout__call_api_logout_and_clear_data');">
+                <td>
+                  
+                    <h3 class="time">0.005s</h3>
+                  
+                </td>
+                <td><h3 class="title">User_tapped_Menu__logout__call_api_logout_and_clear_data</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPATests.UserServiceSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPATests.UserServiceSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('loginWithUsernameAndPassword__success__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.013s</h3>
+                  
+                </td>
+                <td><h3 class="title">loginWithUsernameAndPassword__success__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('loginWithUsernameAndPassword__error__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.013s</h3>
+                  
+                </td>
+                <td><h3 class="title">loginWithUsernameAndPassword__error__receive_error</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Update_user__success_with_default_hosital_not_nil__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.012s</h3>
+                  
+                </td>
+                <td><h3 class="title">Update_user__success_with_default_hosital_not_nil__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Update_user__success_without_default_hosital__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.013s</h3>
+                  
+                </td>
+                <td><h3 class="title">Update_user__success_without_default_hosital__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Update_user__error__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.012s</h3>
+                  
+                </td>
+                <td><h3 class="title">Update_user__error__receive_error</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_user__success_with_default_hosital_not_nil__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.013s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_user__success_with_default_hosital_not_nil__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Get_user__success_without_default_hosital__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_user__success_without_default_hosital__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Get_user__error__receive_error');">
+                <td>
+                  
+                    <h3 class="time">0.012s</h3>
+                  
+                </td>
+                <td><h3 class="title">Get_user__error__receive_error</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Log_out__success__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">Log_out__success__receive_data</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Log_out__fail__receive_data');">
+                <td>
+                  
+                    <h3 class="time">0.001s</h3>
+                  
+                </td>
+                <td><h3 class="title">Log_out__fail__receive_data</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPAUITests.AnalyticsDashboardSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.AnalyticsDashboardSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Analytics_Dashboard__show_analytics_dashboard');">
+                <td>
+                  
+                    <h3 class="time">7.823s</h3>
+                  
+                </td>
+                <td><h3 class="title">Analytics_Dashboard__show_analytics_dashboard</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite failing" id="NepTunePPAUITests.DevicesCompareSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.DevicesCompareSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test failing "  onclick="toggleDetails('Show_features_list__Show_right_data');">
+                <td>
+                  
+                </td>
+                <td><h3 class="title">Show_features_list__Show_right_data</h3></td>
+              </tr>
+              
+                <tr class="details failing Show_features_list__Show_right_data">
+                  <td></td>
+                  <td>
+                    
+                      <section class="test-detail reason">The step timed out after 10.00 seconds: View is not tappable: <UISwitch: 0x7faee7a6df90; frame = (233 8; 51 31); layer = <CALayer: 0x608000837ae0>></section>
+                    
+                    
+                      <section class="test-detail snippet">  <span class="kd">func</span> <span class="nf">tapReseachDevice</span><span class="p">(</span><span class="nv">row</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">switchOn</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">viewTester</span><span class="p">()</span><span class="o">.</span><span class="nf">usingLabel</span><span class="p">(</span><span class="s">"DeviceTableViewCell_switchBtn_</span><span class="se">\(</span><span class="n">row</span><span class="se">)</span><span class="s">"</span><span class="p">)</span><span class="o">.</span><span class="nf">setSwitchOn</span><span class="p">(</span><span class="n">switchOn</span><span class="p">)</span>
+  <span class="p">}</span>
+</section>
+                      <section class="test-detail">/Users/ea/Project/Neptune-iOS/NepTunePPAUITests/ItegrationTest/Devices/DevicesSpec.swift:238</section>
+                    
+                    
+                  </td>
+                </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite failing" id="NepTunePPAUITests.DevicesSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.DevicesSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test failing "  onclick="toggleDetails('Show_a_list_devices__with_default_filter__system___not_bulk___entry_');">
+                <td>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__with_default_filter__system___not_bulk___entry_</h3></td>
+              </tr>
+              
+                <tr class="details failing Show_a_list_devices__with_default_filter__system___not_bulk___entry_">
+                  <td></td>
+                  <td>
+                    
+                      <section class="test-detail reason">expected to equal <4>, got <2></section>
+                    
+                    
+                      <section class="test-detail snippet">    <span class="k">if</span> <span class="k">let</span> <span class="nv">tableView</span> <span class="o">=</span> <span class="nf">viewTester</span><span class="p">()</span><span class="o">.</span><span class="nf">usingLabel</span><span class="p">(</span><span class="s">"DevicesViewController_mainTableView"</span><span class="p">)</span><span class="o">.</span><span class="nf">waitForView</span><span class="p">()</span> <span class="k">as?</span> <span class="kt">UITableView</span> <span class="p">{</span>
+      <span class="nf">expect</span><span class="p">(</span><span class="n">tableView</span><span class="o">.</span><span class="n">visibleCells</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="o">==</span> <span class="n">number</span>
+      <span class="k">return</span>
+</section>
+                      <section class="test-detail">/Users/ea/Project/Neptune-iOS/NepTunePPAUITests/ItegrationTest/Devices/DevicesSpec.swift:218</section>
+                    
+                    
+                  </td>
+                </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Show_a_list_devices__select_research_a_device__should_show_line_chart');">
+                <td>
+                  
+                    <h3 class="time">10.612s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__select_research_a_device__should_show_line_chart</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test failing "  onclick="toggleDetails('Show_a_list_devices__select_research_a_device__Select_more_one_devices__should_show_line_chart');">
+                <td>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__select_research_a_device__Select_more_one_devices__should_show_line_chart</h3></td>
+              </tr>
+              
+                <tr class="details failing Show_a_list_devices__select_research_a_device__Select_more_one_devices__should_show_line_chart">
+                  <td></td>
+                  <td>
+                    
+                      <section class="test-detail reason">The step timed out after 10.00 seconds: View is not tappable: <UISwitch: 0x7faeeb0329e0; frame = (233 8; 51 31); layer = <CALayer: 0x60c000a3ede0>></section>
+                    
+                    
+                      <section class="test-detail snippet">  <span class="kd">func</span> <span class="nf">tapReseachDevice</span><span class="p">(</span><span class="nv">row</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">switchOn</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">viewTester</span><span class="p">()</span><span class="o">.</span><span class="nf">usingLabel</span><span class="p">(</span><span class="s">"DeviceTableViewCell_switchBtn_</span><span class="se">\(</span><span class="n">row</span><span class="se">)</span><span class="s">"</span><span class="p">)</span><span class="o">.</span><span class="nf">setSwitchOn</span><span class="p">(</span><span class="n">switchOn</span><span class="p">)</span>
+  <span class="p">}</span>
+</section>
+                      <section class="test-detail">/Users/ea/Project/Neptune-iOS/NepTunePPAUITests/ItegrationTest/Devices/DevicesSpec.swift:238</section>
+                    
+                    
+                  </td>
+                </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Show_a_list_devices__select_research_a_device__and_deselect__should_hide_line_chart');">
+                <td>
+                  
+                    <h3 class="time">12.763s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__select_research_a_device__and_deselect__should_hide_line_chart</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Show_a_list_devices__Tap_bulks__zero__bulk_btn_should_be_disabled');">
+                <td>
+                  
+                    <h3 class="time">9.498s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__Tap_bulks__zero__bulk_btn_should_be_disabled</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Show_a_list_devices__Tap_bulks__not_zero__Should_show_bulks_list');">
+                <td>
+                  
+                    <h3 class="time">10.626s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__Tap_bulks__not_zero__Should_show_bulks_list</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test failing "  onclick="toggleDetails('Show_a_list_devices__change_filter_to__system___not_bulk___advanced___change_devices_correctly');">
+                <td>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__change_filter_to__system___not_bulk___advanced___change_devices_correctly</h3></td>
+              </tr>
+              
+                <tr class="details failing Show_a_list_devices__change_filter_to__system___not_bulk___advanced___change_devices_correctly">
+                  <td></td>
+                  <td>
+                    
+                      <section class="test-detail reason">expected to equal <4>, got <2></section>
+                    
+                    
+                      <section class="test-detail snippet">    <span class="k">if</span> <span class="k">let</span> <span class="nv">tableView</span> <span class="o">=</span> <span class="nf">viewTester</span><span class="p">()</span><span class="o">.</span><span class="nf">usingLabel</span><span class="p">(</span><span class="s">"DevicesViewController_mainTableView"</span><span class="p">)</span><span class="o">.</span><span class="nf">waitForView</span><span class="p">()</span> <span class="k">as?</span> <span class="kt">UITableView</span> <span class="p">{</span>
+      <span class="nf">expect</span><span class="p">(</span><span class="n">tableView</span><span class="o">.</span><span class="n">visibleCells</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="o">==</span> <span class="n">number</span>
+      <span class="k">return</span>
+</section>
+                      <section class="test-detail">/Users/ea/Project/Neptune-iOS/NepTunePPAUITests/ItegrationTest/Devices/DevicesSpec.swift:218</section>
+                    
+                    
+                  </td>
+                </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Show_a_list_devices__change_filter_to__system___bulk___entry___change_devices_correctly');">
+                <td>
+                  
+                    <h3 class="time">17.096s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__change_filter_to__system___bulk___entry___change_devices_correctly</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Show_a_list_devices__change_filter_to__system___bulk___advanced___change_devices_correctly');">
+                <td>
+                  
+                    <h3 class="time">17.113s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__change_filter_to__system___bulk___advanced___change_devices_correctly</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test failing odd"  onclick="toggleDetails('Show_a_list_devices__change_filter_to__unit___not_bulk___entry___change_devices_correctly');">
+                <td>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__change_filter_to__unit___not_bulk___entry___change_devices_correctly</h3></td>
+              </tr>
+              
+                <tr class="details failing Show_a_list_devices__change_filter_to__unit___not_bulk___entry___change_devices_correctly">
+                  <td></td>
+                  <td>
+                    
+                      <section class="test-detail reason">expected to equal <4>, got <2></section>
+                    
+                    
+                      <section class="test-detail snippet">    <span class="k">if</span> <span class="k">let</span> <span class="nv">tableView</span> <span class="o">=</span> <span class="nf">viewTester</span><span class="p">()</span><span class="o">.</span><span class="nf">usingLabel</span><span class="p">(</span><span class="s">"DevicesViewController_mainTableView"</span><span class="p">)</span><span class="o">.</span><span class="nf">waitForView</span><span class="p">()</span> <span class="k">as?</span> <span class="kt">UITableView</span> <span class="p">{</span>
+      <span class="nf">expect</span><span class="p">(</span><span class="n">tableView</span><span class="o">.</span><span class="n">visibleCells</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="o">==</span> <span class="n">number</span>
+      <span class="k">return</span>
+</section>
+                      <section class="test-detail">/Users/ea/Project/Neptune-iOS/NepTunePPAUITests/ItegrationTest/Devices/DevicesSpec.swift:218</section>
+                    
+                    
+                  </td>
+                </tr>
+              
+            
+              
+              <tr class="test failing "  onclick="toggleDetails('Show_a_list_devices__change_filter_to__unit___not_bulk___advanced___change_devices_correctly');">
+                <td>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__change_filter_to__unit___not_bulk___advanced___change_devices_correctly</h3></td>
+              </tr>
+              
+                <tr class="details failing Show_a_list_devices__change_filter_to__unit___not_bulk___advanced___change_devices_correctly">
+                  <td></td>
+                  <td>
+                    
+                      <section class="test-detail reason">expected to equal <3>, got <2></section>
+                    
+                    
+                      <section class="test-detail snippet">    <span class="k">if</span> <span class="k">let</span> <span class="nv">tableView</span> <span class="o">=</span> <span class="nf">viewTester</span><span class="p">()</span><span class="o">.</span><span class="nf">usingLabel</span><span class="p">(</span><span class="s">"DevicesViewController_mainTableView"</span><span class="p">)</span><span class="o">.</span><span class="nf">waitForView</span><span class="p">()</span> <span class="k">as?</span> <span class="kt">UITableView</span> <span class="p">{</span>
+      <span class="nf">expect</span><span class="p">(</span><span class="n">tableView</span><span class="o">.</span><span class="n">visibleCells</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="o">==</span> <span class="n">number</span>
+      <span class="k">return</span>
+</section>
+                      <section class="test-detail">/Users/ea/Project/Neptune-iOS/NepTunePPAUITests/ItegrationTest/Devices/DevicesSpec.swift:218</section>
+                    
+                    
+                  </td>
+                </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Show_a_list_devices__change_filter_to__unit___bulk___entry___change_devices_correctly');">
+                <td>
+                  
+                    <h3 class="time">17.122s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__change_filter_to__unit___bulk___entry___change_devices_correctly</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Show_a_list_devices__change_filter_to__unit___bulk___advanced___change_devices_correctly');">
+                <td>
+                  
+                    <h3 class="time">17.117s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_list_devices__change_filter_to__unit___bulk___advanced___change_devices_correctly</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Show_a_empty_list_devices__show_the_label_no_result');">
+                <td>
+                  
+                    <h3 class="time">9.475s</h3>
+                  
+                </td>
+                <td><h3 class="title">Show_a_empty_list_devices__show_the_label_no_result</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPAUITests.HomeSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.HomeSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Home__should_show_dropDown_Icon');">
+                <td>
+                  
+                    <h3 class="time">3.883s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__should_show_dropDown_Icon</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Home__tab_dropDown__should_show_drop_down');">
+                <td>
+                  
+                    <h3 class="time">4.528s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tab_dropDown__should_show_drop_down</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Home__tab_dropDown__tap_Navigation__should_dismiss_dropdown');">
+                <td>
+                  
+                    <h3 class="time">5.531s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tab_dropDown__tap_Navigation__should_dismiss_dropdown</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Home__tab_dropDown__tap_out_of_table__should_dismiss_dropdown');">
+                <td>
+                  
+                    <h3 class="time">5.540s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tab_dropDown__tap_out_of_table__should_dismiss_dropdown</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Home__tab_dropDown__Select_a_other_hospital__should_dismiss_dropdown');">
+                <td>
+                  
+                    <h3 class="time">7.451s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tab_dropDown__Select_a_other_hospital__should_dismiss_dropdown</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Home__tab_dropDown__Select_a_other_hospital__tap_Ok__Should_dismiss_bottom_Alert_view');">
+                <td>
+                  
+                    <h3 class="time">7.958s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tab_dropDown__Select_a_other_hospital__tap_Ok__Should_dismiss_bottom_Alert_view</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Home__tab_dropDown__Select_a_other_hospital__tap_cancel__Should_dismiss_bottom_Alert_view');">
+                <td>
+                  
+                    <h3 class="time">7.960s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tab_dropDown__Select_a_other_hospital__tap_cancel__Should_dismiss_bottom_Alert_view</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Home__tap_analytic__show_analytics_dashboard');">
+                <td>
+                  
+                    <h3 class="time">6.526s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tap_analytic__show_analytics_dashboard</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Home__tap_select_device__show_device_categories_screen');">
+                <td>
+                  
+                    <h3 class="time">6.542s</h3>
+                  
+                </td>
+                <td><h3 class="title">Home__tap_select_device__show_device_categories_screen</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPAUITests.HospitalSelectionSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.HospitalSelectionSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Select_default_hospital__should_have_a_hospitals_table_');">
+                <td>
+                  
+                    <h3 class="time">4.022s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_default_hospital__should_have_a_hospitals_table_</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Select_default_hospital__user_selects_hospital__show_the_popup');">
+                <td>
+                  
+                    <h3 class="time">6.017s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_default_hospital__user_selects_hospital__show_the_popup</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Select_default_hospital__user_selects_hospital__then_cancel__popup_closed');">
+                <td>
+                  
+                    <h3 class="time">7.550s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_default_hospital__user_selects_hospital__then_cancel__popup_closed</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Select_default_hospital__user_selects_hospital__then_ok__open_home_screen');">
+                <td>
+                  
+                    <h3 class="time">7.559s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_default_hospital__user_selects_hospital__then_ok__open_home_screen</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPAUITests.LeftMenuSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.LeftMenuSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Left_Menu__tap_analytic__show_analytics_dashboard');">
+                <td>
+                  
+                    <h3 class="time">5.999s</h3>
+                  
+                </td>
+                <td><h3 class="title">Left_Menu__tap_analytic__show_analytics_dashboard</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Left_Menu__tap_select_device__show_device_categories_screen');">
+                <td>
+                  
+                    <h3 class="time">6.004s</h3>
+                  
+                </td>
+                <td><h3 class="title">Left_Menu__tap_select_device__show_device_categories_screen</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPAUITests.LoginSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.LoginSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Login__Do_login__success_with_default_hospital__open_detail_hospital_screen');">
+                <td>
+                  
+                    <h3 class="time">4.031s</h3>
+                  
+                </td>
+                <td><h3 class="title">Login__Do_login__success_with_default_hospital__open_detail_hospital_screen</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing odd"  onclick="toggleDetails('Login__Do_login__success_without_default_hospital__open_select_hospital_screen');">
+                <td>
+                  
+                    <h3 class="time">4.011s</h3>
+                  
+                </td>
+                <td><h3 class="title">Login__Do_login__success_without_default_hospital__open_select_hospital_screen</h3></td>
+              </tr>
+              
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Login__Do_login__fail__should_show_alert_view');">
+                <td>
+                  
+                    <h3 class="time">3.879s</h3>
+                  
+                </td>
+                <td><h3 class="title">Login__Do_login__fail__should_show_alert_view</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+        
+        <section class="test-suite passing" id="NepTunePPAUITests.SelectDeviceSpec">
+          <section class="heading" onclick="toggleTests(this);">
+            <h3 class="title">NepTunePPAUITests.SelectDeviceSpec</h3>
+          </section>
+          <section class="tests">
+            <table>
+            
+              
+              <tr class="test passing "  onclick="toggleDetails('Select_Device__show_analytics_dashboard');">
+                <td>
+                  
+                    <h3 class="time">7.585s</h3>
+                  
+                </td>
+                <td><h3 class="title">Select_Device__show_analytics_dashboard</h3></td>
+              </tr>
+              
+            
+            </table>
+          </section>
+        </section>
+      
+    </section>
+    <footer>Report generated with <a href="https://github.com/supermarin/xcpretty">xcpretty</a></footer>
+  </body>
+</html>
