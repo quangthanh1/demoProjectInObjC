@@ -26,11 +26,15 @@ platform :ios do
                 devices: "iPhone 6",
                 scheme: "demoProjectObjectiveC"
     )
-    xcov(
-      scheme: "demoProjectObjectiveC", # Change to your schema
+    slather(
+      workspace:"demoProjectObjectiveC.xcworkspace",
+      proj:"demoProjectObjectiveC.xcodeproj",
+      scheme: "demoProjectObjectiveC",
+      source_files: "./",
       output_directory: "xcov_output",
-      ignore_file_path: ".xcovignore",
-      coveralls_repo_token: 'VzzUcqXu4nrNoZyZYP0plDnaa3jcgJFUb',
+      circleci: true,
+      coveralls: true,
+      gutter_json: true
     )
   end
 end
