@@ -8,6 +8,11 @@ jobs:
     steps:
       - checkout
 
+      - run:
+          name: Prepare .config files
+          command:
+            echo "repo_token:$REPO_TOKEN" > ./.coveralls.yml
+
       - run: 
           name: install bundle
           command: bundle install
