@@ -26,15 +26,6 @@ platform :ios do
                 devices: "iPhone 6",
                 scheme: "demoProjectObjectiveC"
     )
-    slather(
-      workspace:"demoProjectObjectiveC.xcworkspace",
-      proj:"demoProjectObjectiveC.xcodeproj",
-      scheme: "demoProjectObjectiveC",
-      source_files: "./",
-      output_directory: "xcov_output",
-      circleci: true,
-      coveralls: true,
-      gutter_json: true
-    )
+    slather
   end
 end
