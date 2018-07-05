@@ -30,7 +30,8 @@ platform :ios do
       scheme: "demoProjectObjectiveC",
       proj: "demoProjectObjectiveC.xcodeproj",
       workspace: "demoProjectObjectiveC.xcworkspace",
-      coveralls: "true"
+      coveralls: "true",
+      use_bundle_exec: "true"
     )
   end
 end
