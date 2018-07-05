@@ -1,12 +1,12 @@
 ci_service: circleci
 coverage_service: coveralls
-workspace: "demoProjectObjectiveC.xcworkspace",
-proj: "demoProjectObjectiveC.xcodeproj",
-scheme: "demoProjectObjectiveC",
-source_files: "./",
-output_directory: "xcov_output",
-circleci: "true",
-coveralls: "true",
+workspace: "demoProjectObjectiveC.xcworkspace"
+proj: "demoProjectObjectiveC.xcodeproj"
+scheme: "demoProjectObjectiveC"
+source_files: "./"
+output_directory: "xcov_output"
+circleci: "true"
+coveralls: "true"
 gutter_json: "true"
 
 
