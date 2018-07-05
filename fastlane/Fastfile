@@ -26,6 +26,11 @@ platform :ios do
                 devices: "iPhone 6",
                 scheme: "demoProjectObjectiveC"
     )
-    slather
+    slather(
+      scheme: "demoProjectObjectiveC",
+      proj: "demoProjectObjectiveC.xcodeproj",
+      workspace: "demoProjectObjectiveC.xcworkspace",
+      coveralls: "true"
+    )
   end
 end
