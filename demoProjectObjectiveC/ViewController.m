@@ -28,5 +28,9 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (BOOL)testTest {
+    return YES;
+}
+
 
 @end

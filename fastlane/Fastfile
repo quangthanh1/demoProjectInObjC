@@ -18,17 +18,15 @@ default_platform(:ios)
 platform :ios do
   desc "Description of what the lane does"
   lane :tests do
-    run_tests(workspace: "demoProjectObjectiveC.xcworkspace",
+    scan(workspace: "demoProjectObjectiveC.xcworkspace",
                 devices: "iPhone 6",
-                scheme: "demoProjectObjectiveCTests")
-  end
-  desc "Description of what the lane does"
-  lane :coverage do
-    lcov(project_name: "demoProjectObjectiveC.xcworkspace",
-          scheme: "demoProjectObjectiveCTests")
-  end
-  lane :cover do
-    scan(code_coverage: true,
-          device: "iPhone 6")
+                scheme: "demoProjectObjectiveC"
+    )
+    xcov(
+      scheme: "demoProjectObjectiveC", # Change to your schema
+      output_directory: "xcov_output",
+      ignore_file_path: ".xcovignore",
+      coveralls_repo_token: 'mjXM9FmYUoIcglfZK1Uo2cALFmWR2tugp',
+    )
   end
 end
